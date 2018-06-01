@@ -1,0 +1,29 @@
+{
+    "name": "lewee/sms",
+    "description": "A PHP SDK to send SMS",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "jowan",
+            "email": "jowan@ahlewei.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Lewee\\Sms\\SmsServiceProvider"
+            ],
+            "aliases": {
+                "Sms": "Lewee\\Sms\\Facades\\Sms"
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Lewee\\Sms\\": "src/"
+        }
+    }
+}
