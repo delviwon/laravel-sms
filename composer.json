@@ -12,6 +12,7 @@
         "php": ">=7.0.0",
         "guzzlehttp/guzzle": "~6.0"
     },
+    "minimum-stability":"dev",
     "extra": {
         "laravel": {
             "providers": [
