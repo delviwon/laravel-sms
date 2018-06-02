@@ -15,8 +15,8 @@ trait Gateway
     protected function config($key)
     {
         $gateway = self::GATEWAY;
-        $cached_config = cache('SMS');
-        return $cached_config['gateways'][$gateway][$key] ?? config("sms.gateways.{$gateway}.{$key}");
+        $config = cache('SMS') ?? config('sms');
+        return $config['gateways'][$gateway][$key] ?? '';
     }
 
     /**
