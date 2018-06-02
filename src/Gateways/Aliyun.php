@@ -2,7 +2,12 @@
 
 namespace Lewee\Sms\Gateways;
 
+use Lewee\Sms\Traits\Gateway;
+
 class Aliyun implements \Lewee\Sms\Sender{
+    use Gateway;
+
+    const GATEWAY = 'aliyun';
     const REQUEST_URL = 'dysmsapi.aliyuncs.com';
     const SIGNATURE_METHOD = 'HMAC-SHA1';
     const SIGNATURE_VERSION = '1.0';
@@ -11,21 +16,6 @@ class Aliyun implements \Lewee\Sms\Sender{
     const ACTION = 'SendSms';
     const VERSION = '2017-05-25';
     const X_SDK_CLIENT = 'php/2.0.0';
-    private $security;
-    private $access_key_id;
-    private $access_key_secret;
-    private $sign;
-
-    /**
-     * Aliyun constructor.
-     */
-    public function __construct()
-    {
-        $this->security = config('sms.gateways.aliyun.security');
-        $this->access_key_id = config('sms.gateways.aliyun.access_key_id');
-        $this->access_key_secret = config('sms.gateways.aliyun.access_key_secret');
-        $this->sign = config('sms.gateways.aliyun.sign');
-    }
 
     /**
      * Send message
@@ -37,7 +27,7 @@ class Aliyun implements \Lewee\Sms\Sender{
     {
         $send_args = [
             'PhoneNumbers' => $phone,
-            'SignName' => $this->sign,
+            'SignName' => $this->config('sign'),
             'TemplateCode' => $args['template_id'],
         ];
 
@@ -47,19 +37,19 @@ class Aliyun implements \Lewee\Sms\Sender{
 
         $sorted_query_string = $this->getSortedQueryString($send_args);
         $signature = $this->makeSignature($sorted_query_string);
-        $url = ($this->security ? 'https' : 'http') . '://' . self::REQUEST_URL . "/?Signature={$signature}{$sorted_query_string}";
+        $protocol = $this->config('security') ? 'https' : 'http';
+        $url = "{$protocol}://" . self::REQUEST_URL . "/?Signature={$signature}{$sorted_query_string}";
 
-        try {
-            $content = $this->fetchContent($url);
-            $result = json_decode($content);
+        $headers = [
+            'x-sdk-client' => self::X_SDK_CLIENT,
+        ];
 
-            if ($result->Code == 'OK') {
-                return true;
-            } else {
-                return request()->wantsJson() ? $result : show_error($result->Message)->send();
-            }
-        } catch ( \Exception $e) {
-            return false;
+        $result = $this->request('GET', $url, $headers);
+
+        if ($result['Code'] == 'OK') {
+            return true;
+        } else {
+            return request()->wantsJson() ? $result : show_error($result['Message'])->send();
         }
     }
 
@@ -74,7 +64,7 @@ class Aliyun implements \Lewee\Sms\Sender{
             'SignatureMethod' => self::SIGNATURE_METHOD,
             'SignatureNonce' => uniqid(mt_rand(0,0xffff), true),
             'SignatureVersion' => self::SIGNATURE_VERSION,
-            'AccessKeyId' => $this->access_key_id,
+            'AccessKeyId' => $this->config('access_key_id'),
             'Timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             'Format' => self::FORMAT,
             'RegionId' => self::REGION_ID,
@@ -101,7 +91,7 @@ class Aliyun implements \Lewee\Sms\Sender{
     protected function makeSignature($sorted_query_string)
     {
         $string_to_sign = 'GET&%2F&' . $this->encode(substr($sorted_query_string, 1));
-        $sign = base64_encode(hash_hmac('sha1', $string_to_sign, $this->access_key_secret . '&',true));
+        $sign = base64_encode(hash_hmac('sha1', $string_to_sign, $this->config('access_key_secret') . '&',true));
         return $this->encode($sign);
     }
 
@@ -117,35 +107,5 @@ class Aliyun implements \Lewee\Sms\Sender{
         $res = preg_replace('/\*/', '%2A', $res);
         $res = preg_replace('/%7E/', '~', $res);
         return $res;
-    }
-
-    /**
-     * Send curl request
-     * @param $url
-     * @return mixed
-     */
-    private function fetchContent($url) {
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'x-sdk-client' => self::X_SDK_CLIENT
-        ]);
-
-        if(substr($url, 0,5) == 'https') {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        }
-
-        $rtn = curl_exec($ch);
-
-        if($rtn === false) {
-            trigger_error('[CURL_' . curl_errno($ch) . ']:' . curl_error($ch), E_USER_ERROR);
-        }
-
-        curl_close($ch);
-
-        return $rtn;
     }
 }

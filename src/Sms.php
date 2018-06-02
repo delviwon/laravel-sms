@@ -2,7 +2,6 @@
 
 namespace Lewee\Sms;
 
-
 class Sms implements Sender
 {
     /**
