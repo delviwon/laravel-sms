@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'enabled' => true,
     'default' => 'aliyun',
 
     'gateways' => [
