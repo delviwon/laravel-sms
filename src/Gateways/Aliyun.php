@@ -22,6 +22,7 @@ class Aliyun implements \Lewee\Sms\Sender{
      * @param $phone
      * @param $args
      * @return bool
+     * @throws \Exception
      */
     public function send($phone, $args)
     {
@@ -49,7 +50,7 @@ class Aliyun implements \Lewee\Sms\Sender{
         if ($result['Code'] == 'OK') {
             return true;
         } else {
-            return request()->wantsJson() ? $result : show_error($result['Message'])->send();
+            throw new \Exception($result['Message']);
         }
     }
 
