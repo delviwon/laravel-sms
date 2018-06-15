@@ -2,6 +2,8 @@
 
 namespace Lewee\Sms;
 
+use App\Exceptions\InvalidRequestException;
+
 class Sms implements Sender
 {
     /**
@@ -16,9 +18,7 @@ class Sms implements Sender
         $enabled = cache('SMS')['enabled'] ?? config('sms.enabled');
 
         if (!$enabled) {
-            $error_message = 'SMS service is disabled';
-
-            return request()->wantsJson() ? error($error_message) : show_error($error_message)->send();
+            throw new InvalidRequestException('SMS service is disabled');
         }
 
         $gateway = cache('SMS')['default'] ?? config('sms.default');
