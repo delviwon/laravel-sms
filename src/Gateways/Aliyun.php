@@ -2,6 +2,7 @@
 
 namespace Lewee\Sms\Gateways;
 
+use App\Exceptions\InternalException;
 use Lewee\Sms\Traits\Gateway;
 
 class Aliyun implements \Lewee\Sms\Sender{
@@ -50,7 +51,7 @@ class Aliyun implements \Lewee\Sms\Sender{
         if ($result['Code'] == 'OK') {
             return true;
         } else {
-            throw new \Exception($result['Message']);
+            throw new InternalException($result['message']);
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace Lewee\Sms;
 
+use App\Exceptions\InternalException;
 use App\Exceptions\InvalidRequestException;
 
 class Sms implements Sender
@@ -37,7 +38,7 @@ class Sms implements Sender
         $gateway = __NAMESPACE__ . "\\Gateways\\{$name}";
 
         if ( !class_exists($gateway)) {
-            throw new \Exception('Sms gateway class not found');
+            throw new InternalException('Sms gateway class not found');
         }
 
         return new $gateway();
