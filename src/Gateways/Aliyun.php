@@ -3,9 +3,10 @@
 namespace Lewee\Sms\Gateways;
 
 use App\Exceptions\InternalException;
+use Lewee\Sms\Sender;
 use Lewee\Sms\Traits\Gateway;
 
-class Aliyun implements \Lewee\Sms\Sender{
+class Aliyun implements Sender {
     use Gateway;
 
     const GATEWAY = 'aliyun';
@@ -27,6 +28,10 @@ class Aliyun implements \Lewee\Sms\Sender{
      */
     public function send($phone, $args)
     {
+        if (!$args['template_id']) {
+            throw new InternalException('Sms template is not defined');
+        }
+
         $send_args = [
             'PhoneNumbers' => $phone,
             'SignName' => $this->config('sign'),
@@ -48,11 +53,11 @@ class Aliyun implements \Lewee\Sms\Sender{
 
         $result = $this->request('GET', $url, $headers);
 
-        if ($result['Code'] == 'OK') {
-            return true;
-        } else {
-            throw new InternalException($result['message']);
+        if ($result['Code'] != 'OK') {
+            throw new InternalException($result['Message']);
         }
+
+        return true;
     }
 
     /**

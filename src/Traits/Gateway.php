@@ -42,9 +42,10 @@ trait Gateway
      * @param $url
      * @param array $headers
      * @param array $params
+     * @param string $params_type
      * @return mixed|void
      */
-    protected function request($method, $url, $headers = [], $params = [])
+    protected function request($method, $url, $headers = [], $params = [], $params_type = 'json')
     {
         $config = [
             'timeout' => 15,
@@ -63,10 +64,7 @@ trait Gateway
 
                 break;
             case 'POST':
-                if ($params) {
-                    $config['form_params'] = $params;
-                }
-
+                $config[$params_type] = $params;
                 break;
             default:
                 return;
@@ -75,11 +73,9 @@ trait Gateway
         try {
             $client = new Client();
             $response = $client->request($method, $url, $config);
-
             return $this->getResponse($response);
         } catch (RequestException $e) {
             $response = $e->getResponse();
-
             return $this->getResponse($response);
         }
     }
