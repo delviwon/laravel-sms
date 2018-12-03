@@ -16,13 +16,14 @@ class Sms implements Sender
      */
     public function send($phone, $args)
     {
-        $enabled = cache('SMS')['enabled'] ?? config('sms.enabled');
+        $setting = config_item('sms');
+        $enabled = $setting['enabled'] ?? config('sms.enabled');
 
         if (!$enabled) {
             throw new InvalidRequestException('SMS service is disabled');
         }
 
-        $gateway = cache('SMS')['default'] ?? config('sms.default');
+        $gateway = $setting['default'] ?? config('sms.default');
         $this->getGateway($gateway)->send($phone, $args);
     }
 
